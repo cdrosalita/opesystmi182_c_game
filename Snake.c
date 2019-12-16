@@ -7,8 +7,8 @@
 #define MAXWIDTH 79
 #define MAXHEIGHT 23
 
-/* checks if key has been hit or not */
 int kbhit (void) {
+  /* checks if key has been hit or not */
   struct timeval tv;
   fd_set read_fd;
 
@@ -26,36 +26,63 @@ int kbhit (void) {
   return 0;
 }
 
-/* moves snake one position to the direction provided also controls the speed
-   of the game using usleep function
-*/
-void moveSnake(int* snakeX, int* snakeY, int dirX, int dirY, int speed) {
+int colliding(int *snakeArray, int snakeLength) {
+  /* checks if snake is colliding with walls */
+  int x = *snakeArray;
+  int y = *(snakeArray+1);
 
-  int x = *snakeX + dirX;
-  int y = *snakeY + dirY;
-  *snakeX = x;
-  *snakeY = y;
-  mvprintw(*snakeY, *snakeX, ".....");
-  usleep(100000 * speed);
-
-}
-
-/* checks if snake is colliding with walls */
-int colliding(int snakeX, int snakeY) {
-  if (snakeX < 0 || snakeX > MAXWIDTH+1) {
+  if (x < 0 || x > MAXWIDTH) {
     return 1;
   }
-  else if (snakeY < 0 || snakeY > MAXHEIGHT+1) {
+  else if (y < 0 || y > MAXHEIGHT) {
     return 1;
+  }
+
+  for (size_t i = 2; i < snakeLength*2+2; i+=2) {
+    if (x == *(snakeArray+i) && y == *(snakeArray+i+1)) {
+      return 1;
+    }
   }
   return 0;
 }
 
-/* new random apple location if apple is eaten, if not then prints apple at
-   previous location
-*/
-void letThereBeApple(int* appleX, int* appleY, int *appleEaten) {
+void moveSnake(int *snakeArray, int dirX, int dirY, int speed, int snakeLength) {
+  /* moves snake one position to the direction provided also controls the speed
+     of the game using usleep function */
+  int oldX = 0;
+  int oldY = 0;
+  int curX = *snakeArray;
+  int curY = *(snakeArray+1);
+  int newX = curX + dirX;
+  int newY = curY + dirY;
 
+  *(snakeArray) = newX;
+  *(snakeArray+1) = newY;
+  mvprintw(newY, newX, ".");
+
+  for (size_t i = 2; i < snakeLength*2; i += 2) {
+    oldX = curX;
+    oldY = curY;
+    curX = *(snakeArray+i);
+    curY = *(snakeArray+i+1);
+    newX = oldX;
+    newY = oldY;
+    *(snakeArray+i) = newX;
+    *(snakeArray+i+1) = newY;
+
+    mvprintw(newY, newX, ".");
+  }
+
+  if (dirY != 0) {
+    usleep(500000/speed);
+  }
+
+  usleep(1000000/speed);
+}
+
+void letThereBeApple(int* appleX, int* appleY, int *appleEaten) {
+  /* new random apple location if apple is eaten, if not then prints apple at
+     previous location */
   if (*appleEaten) {
     srand(time(0)); //use current time as seed for random generator
     *appleX = (rand() % MAXWIDTH)+1;
@@ -64,50 +91,60 @@ void letThereBeApple(int* appleX, int* appleY, int *appleEaten) {
   }
 
   mvprintw(*appleY, *appleX,"o");
-
 }
 
-/* if snake find apple get one point, also sets appleEaten to true and
-   prints score and debug info
-*/
-void eatApple(int snakeX, int snakeY, int appleX, int appleY,
-              int *appleEaten, int *score) {
-
-  if (snakeX == appleX && snakeY == appleY) {
+void eatApple(int *snakeArray, int appleX, int appleY,
+              int *appleEaten, int *snakeLength) {
+  /* if snake find apple get one point, also sets appleEaten to true and
+  prints snakeLength and debug info */
+  int x = *snakeArray;
+  int y = *(snakeArray+1);
+  if (x == appleX && y == appleY) {
     *appleEaten = 1;
-    *score += 1;
-
+    *snakeLength += 1;
+    int snakeLen = *snakeLength;
+    int lastX = *(snakeArray + snakeLen*2-2);
+    int lastY = *(snakeArray + snakeLen*2-2+1);
+    *(snakeArray + snakeLen*2) = lastX;
+    *(snakeArray + snakeLen*2+1) = lastY;
   }
 
-  mvprintw(0,0,"score: %d, snakeX: %d, snakeY: %d, appleX: %d, appleY: %d",
-           *score, snakeX, snakeY, appleX, appleY);
+  mvprintw(0,0,"snakeLength: %d", *snakeLength);
 }
 
 int main() {
 
-  int snakeX = 79;    /* current snake xy position */
-  int snakeY = 1;
-  int keyPressed = 0; /* which key user pressed */
-  int dirX = -1;      /* direction xy */
+  int snakeArray[100][2];
+  for (size_t i = 0; i < 100; i++) {
+    for (size_t j = 0; j < 2; j++) {
+      snakeArray[i][j] = 0;
+    }
+  }
+  snakeArray[0][0] = 3;
+  snakeArray[0][1] = 3;
+  int keyPressed = 0;   /* which key user pressed */
+  int dirX = 1;        /* direction xy */
   int dirY = 0;
-  int speed = 1;      /* controls speed of the game, higher values make slower */
-  int appleX = 0;     /* current apple xy position */
+  int speed = 20;       /* controls speed of the snake */
+  int appleX = 0;       /* current apple xy position */
   int appleY = 0;
-  int appleEaten = 1; /* is apple eaten? */
-  int score = 0;      /* player score */
+  int appleEaten = 1;   /* is apple eaten? */
+  int snakeLength = 20;  /* player snakeLength */
 
-  initscr();			/* Start curses mode 		  */
+
+
+  initscr();			/* Start curses mode */
   curs_set(false);
   noecho();
 
 
   /* MAIN LOOP */
-  while (!colliding(snakeX, snakeY)) {
+  while (!colliding(&snakeArray[0][0], snakeLength)) {
     erase();
 
     letThereBeApple(&appleX, &appleY, &appleEaten);
-    moveSnake(&snakeX, &snakeY, dirX, dirY, speed);
-    eatApple(snakeX, snakeY, appleX, appleY, &appleEaten, &score);
+    moveSnake(&snakeArray[0][0], dirX, dirY, speed, snakeLength);
+    eatApple(&snakeArray[0][0], appleX, appleY, &appleEaten, &snakeLength);
 
 
     refresh();
@@ -116,27 +153,29 @@ int main() {
     if (kbhit()) {
       keyPressed = getch();
 
-      if (keyPressed == 'w') {
+      if (keyPressed == 'w' && !(dirY == 1 && dirX == 0)) {
         dirY = -1;
         dirX = 0;
       }
-      if (keyPressed == 's') {
+      if (keyPressed == 's' && !(dirY == -1 && dirX == 0)) {
         dirY = 1;
         dirX = 0;
       }
-      if (keyPressed == 'a') {
+      if (keyPressed == 'a' && !(dirY == 0 && dirX == 1)) {
+        dirY = 0;
         dirX = -1;
-        dirY = 0;
       }
-      if (keyPressed == 'd') {
-        dirX = 1;
+      if (keyPressed == 'd' && !(dirY == 0 && dirX == -1)) {
         dirY = 0;
+        dirX = 1;
       }
     }
 
 
   }
-  mvprintw(12,30,"game over!");
+  erase();
+  mvprintw(MAXHEIGHT/2,MAXWIDTH/4,"Game Over! - Your score was: %d", snakeLength);
+  refresh();
 	getch();			/* Wait for user input */
 	endwin();			/* End curses mode		  */
 
