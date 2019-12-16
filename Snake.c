@@ -125,7 +125,7 @@ int main() {
   int keyPressed = 0;   /* which key user pressed */
   int dirX = 1;        /* direction xy */
   int dirY = 0;
-  int speed = 10;       /* controls speed of the snake */
+  int speed = 20;       /* controls speed of the snake */
   int appleX = 0;       /* current apple xy position */
   int appleY = 0;
   int appleEaten = 1;   /* is apple eaten? */
