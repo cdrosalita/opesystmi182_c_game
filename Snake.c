@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MAXWIDTH 79
-#define MAXHEIGHT 24
+#define MAXWIDTH 85
+#define MAXHEIGHT 30
 
 int kbhit (void) {
   /* checks if key has been hit or not */
