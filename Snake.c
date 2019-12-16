@@ -129,7 +129,7 @@ int main() {
   int appleX = 0;       /* current apple xy position */
   int appleY = 0;
   int appleEaten = 1;   /* is apple eaten? */
-  int snakeLength = 20;  /* player snakeLength */
+  int snakeLength = 5;  /* player snakeLength */
 
 
 
