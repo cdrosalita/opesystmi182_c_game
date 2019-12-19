@@ -125,7 +125,7 @@ int main() {
   int keyPressed = 0;   /* which key user pressed */
   int dirX = 1;        /* direction xy */
   int dirY = 0;
-  int speed = 100;       /* controls speed of the snake */
+  int speed = 20;       /* controls speed of the snake */
   int appleX = 0;       /* current apple xy position */
   int appleY = 0;
   int appleEaten = 1;   /* is apple eaten? */
@@ -136,7 +136,7 @@ int main() {
   initscr();			/* Start curses mode */
   curs_set(false);
   noecho();
-
+  keypad(stdscr, TRUE);
 
   /* MAIN LOOP */
   while (!colliding(&snakeArray[0][0], snakeLength)) {
@@ -153,19 +153,19 @@ int main() {
     if (kbhit()) {
       keyPressed = getch();
 
-      if (keyPressed == 'w' && !(dirY == 1 && dirX == 0)) {
+      if (keyPressed == KEY_UP && !(dirY == 1 && dirX == 0)) {
         dirY = -1;
         dirX = 0;
       }
-      if (keyPressed == 's' && !(dirY == -1 && dirX == 0)) {
+      if (keyPressed == KEY_DOWN && !(dirY == -1 && dirX == 0)) {
         dirY = 1;
         dirX = 0;
       }
-      if (keyPressed == 'a' && !(dirY == 0 && dirX == 1)) {
+      if (keyPressed == KEY_LEFT && !(dirY == 0 && dirX == 1)) {
         dirY = 0;
         dirX = -1;
       }
-      if (keyPressed == 'd' && !(dirY == 0 && dirX == -1)) {
+      if (keyPressed == KEY_RIGHT && !(dirY == 0 && dirX == -1)) {
         dirY = 0;
         dirX = 1;
       }
